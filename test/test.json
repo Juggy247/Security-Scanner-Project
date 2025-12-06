@@ -1,0 +1,258 @@
+{
+  "tlds": [
+    {
+      "tld": "tk",
+      "risk_level": "high",
+      "reason": "Free domain commonly used in phishing campaigns",
+      "added_by": "security_team"
+    },
+    {
+      "tld": "xyz",
+      "risk_level": "medium",
+      "reason": "Popular with malicious actors due to low cost",
+      "added_by": "security_team"
+    },
+    {
+      "tld": "top",
+      "risk_level": "high",
+      "reason": "Frequently seen in scam websites",
+      "added_by": "security_team"
+    },
+    {
+      "tld": "gq",
+      "risk_level": "critical",
+      "reason": "Free TLD with minimal verification",
+      "added_by": "security_team"
+    },
+    {
+      "tld": "ml",
+      "risk_level": "critical",
+      "reason": "Free Mali domain, heavily abused",
+      "added_by": "security_team"
+    },
+    {
+      "tld": "ga",
+      "risk_level": "high",
+      "reason": "Free Gabon domain used in phishing",
+      "added_by": "security_team"
+    },
+    {
+      "tld": "cf",
+      "risk_level": "high",
+      "reason": "Free Central African Republic domain",
+      "added_by": "security_team"
+    },
+    {
+      "tld": "pw",
+      "risk_level": "medium",
+      "reason": "Professional Web - often used in suspicious sites",
+      "added_by": "security_team"
+    }
+  ],
+  "brands": [
+    {
+      "brand_name": "paypal",
+      "category": "financial",
+      "added_by": "security_team"
+    },
+    {
+      "brand_name": "amazon",
+      "category": "ecommerce",
+      "added_by": "security_team"
+    },
+    {
+      "brand_name": "google",
+      "category": "technology",
+      "added_by": "security_team"
+    },
+    {
+      "brand_name": "microsoft",
+      "category": "technology",
+      "added_by": "security_team"
+    },
+    {
+      "brand_name": "apple",
+      "category": "technology",
+      "added_by": "security_team"
+    },
+    {
+      "brand_name": "facebook",
+      "category": "social_media",
+      "added_by": "security_team"
+    },
+    {
+      "brand_name": "instagram",
+      "category": "social_media",
+      "added_by": "security_team"
+    },
+    {
+      "brand_name": "netflix",
+      "category": "entertainment",
+      "added_by": "security_team"
+    },
+    {
+      "brand_name": "ebay",
+      "category": "ecommerce",
+      "added_by": "security_team"
+    },
+    {
+      "brand_name": "walmart",
+      "category": "ecommerce",
+      "added_by": "security_team"
+    },
+    {
+      "brand_name": "wells fargo",
+      "category": "financial",
+      "added_by": "security_team"
+    },
+    {
+      "brand_name": "bank of america",
+      "category": "financial",
+      "added_by": "security_team"
+    },
+    {
+      "brand_name": "chase",
+      "category": "financial",
+      "added_by": "security_team"
+    },
+    {
+      "brand_name": "coinbase",
+      "category": "financial",
+      "added_by": "security_team"
+    }
+  ],
+  "keywords": [
+    {
+      "keyword": "verify",
+      "category": "action_words",
+      "risk_level": "high"
+    },
+    {
+      "keyword": "urgent",
+      "category": "urgency",
+      "risk_level": "high"
+    },
+    {
+      "keyword": "secure",
+      "category": "security",
+      "risk_level": "medium"
+    },
+    {
+      "keyword": "suspended",
+      "category": "urgency",
+      "risk_level": "high"
+    },
+    {
+      "keyword": "confirm",
+      "category": "action_words",
+      "risk_level": "medium"
+    },
+    {
+      "keyword": "update",
+      "category": "action_words",
+      "risk_level": "medium"
+    },
+    {
+      "keyword": "unlock",
+      "category": "action_words",
+      "risk_level": "high"
+    },
+    {
+      "keyword": "limited",
+      "category": "urgency",
+      "risk_level": "medium"
+    },
+    {
+      "keyword": "expire",
+      "category": "urgency",
+      "risk_level": "high"
+    },
+    {
+      "keyword": "billing",
+      "category": "financial",
+      "risk_level": "medium"
+    },
+    {
+      "keyword": "payment",
+      "category": "financial",
+      "risk_level": "medium"
+    },
+    {
+      "keyword": "account",
+      "category": "security",
+      "risk_level": "low"
+    },
+    {
+      "keyword": "login",
+      "category": "action_words",
+      "risk_level": "medium"
+    },
+    {
+      "keyword": "password",
+      "category": "security",
+      "risk_level": "medium"
+    },
+    {
+      "keyword": "security",
+      "category": "security",
+      "risk_level": "low"
+    },
+    {
+      "keyword": "alert",
+      "category": "urgency",
+      "risk_level": "high"
+    },
+    {
+      "keyword": "action",
+      "category": "urgency",
+      "risk_level": "medium"
+    },
+    {
+      "keyword": "required",
+      "category": "urgency",
+      "risk_level": "medium"
+    },
+    {
+      "keyword": "immediately",
+      "category": "urgency",
+      "risk_level": "high"
+    },
+    {
+      "keyword": "click",
+      "category": "action_words",
+      "risk_level": "low"
+    }
+  ],
+  "blacklist": [
+    {
+      "domain": "paypal-secure-login.tk",
+      "source": "phishtank",
+      "reason": "PayPal phishing site",
+      "added_by": "automated"
+    },
+    {
+      "domain": "amazon-verify-account.xyz",
+      "source": "manual",
+      "reason": "Amazon impersonation phishing",
+      "added_by": "security_team"
+    },
+    {
+      "domain": "google-security-alert.tk",
+      "source": "phishtank",
+      "reason": "Google phishing attempt",
+      "added_by": "automated"
+    },
+    {
+      "domain": "microsoft-office-update.ml",
+      "source": "manual",
+      "reason": "Fake Microsoft update site",
+      "added_by": "security_team"
+    },
+    {
+      "domain": "apple-id-verify.gq",
+      "source": "phishtank",
+      "reason": "Apple ID phishing",
+      "added_by": "automated"
+    }
+  ]
+}
