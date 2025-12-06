@@ -38,11 +38,11 @@
       
   - Creating Collections
     - Your project uses a database called security_scanner with the following collections:
-        > suspicious_tlds
-        > brands
-        > blacklisted_domains
-        > suspicious_keywords
-        > config_history
+        - suspicious_tlds
+        - brands
+        - blacklisted_domains
+        - suspicious_keywords
+        - config_history
     - The Python code automatically creates these collections, you do not have to create them.
     - Checking them in Terminal
 
