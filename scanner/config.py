@@ -23,8 +23,8 @@ class MongoDbConfig:
             self.suspicious_keywords = self.db['suspicious_keywords']
             self.config_history = self.db['config_history']
 
-            self._create_indexes()  #function created below
-
+            self._create_indexes()  
+            
             logger.info("MongoDb is successfully running!\n")
 
         except ConnectionFailure as e:

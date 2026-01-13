@@ -86,5 +86,8 @@ close_db_connection()
             </a>
                <a href="{{ url_for('admin.import_data') }}" class="btn btn-success">📥 Import Data</a>
                   
-                     
+                     <div id="raw-data" class="raw-data" style="display: none;">
+            <h3 style="margin-bottom: 15px;">Raw Technical Data:</h3>
+            <pre>{{ raw_data }}</pre>
+        </div>
                            """
