@@ -19,6 +19,25 @@
 
     pip install -r requirements.txt
 
+If this does not work we will have to install them by,  
+
+    pip install flask==3.0.0
+    pip install beautifulsoup4==4.12.2
+    pip install requests==2.31.0
+    pip install pymongo==4.6.0
+    pip install dnspython==2.4.2
+    pip install python-whois==0.8.0
+    pip install tensorflow==2.15.0
+    pip install scikit-learn==1.3.2
+    pip install pandas==2.1.3
+    pip install numpy==1.26.2
+    pip install flask-limiter==3.5.0
+    pip install flask-cors==4.0.0
+    pip install flasgger==0.9.7.1
+
+#Important Note
+
+Please ignore files or folder that contain ml/ML or datacollections because they are currently in development.
 
 # Setting up Database
 
