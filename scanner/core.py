@@ -1,8 +1,10 @@
 from urllib.parse import urlparse
 from dataclasses import dataclass, field
 from typing import Optional, List, Dict
+import logging
 from bs4 import BeautifulSoup
 from .robots import scan_check
+import urllib3 
 from .security import (
     check_https_final, check_ssl, check_headers, check_forms
 )
@@ -12,6 +14,10 @@ from .domain_checks import (
     check_suspicious_tld, check_subdomain_depth, check_brand_impersonation
 )
 from .utils import session_get, fetch_url
+
+logger = logging.getLogger(__name__)
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+
 
 def create_issue(issue_type: str, description: str, risk: str, severity: str) -> Dict[str, str]:
     """Create an issue dictionary"""
@@ -283,6 +289,7 @@ class ScanReport:
             self._check_form_security_issues,
             self._check_security_header_issues,
             self._check_robots_issues,
+            self._check_offline_issues,
         ]
         
         for check_method in check_methods:
@@ -379,6 +386,20 @@ class ScanReport:
             'issues': issues,
             'issue_counts': issue_counts
         }
+    
+    def _check_offline_issues(self) -> List[Dict[str, str]]:
+        """Check if domain is offline (could indicate takedown or never existed)"""
+        issues = []
+        
+        if self.error and "Failed to fetch URL" in self.error:
+            issues.append(create_issue(
+                issue_type="Website Offline or Unreachable",
+                description="Cannot connect to this website",
+                risk="Site may be taken down, never existed, or blocking scanners",
+                severity="medium"
+            ))
+        
+        return issues
 
 
 
@@ -388,89 +409,140 @@ class SecurityScanner:
         self.bypass_robots = bypass_robots
     
     def scan(self, url: str) -> ScanReport:
-        """
-        Perform comprehensive security scan on the given URL.
-        
-        Args:
-            url: The URL to scan (must include scheme)
-            
-        Returns:
-            ScanReport object with all scan results
-        """
         report = ScanReport(url=url, success=False)
+
+        parsed_url = urlparse(url)
+        domain = parsed_url.netloc
+        if not domain:
+            report.error = "Invalid URL "
+            return report
         
-        # Check robots.txt
-        report.robots_allowed = scan_check(url, self.session)
+        # Check robots.txt (but don't fail if it times out)
+        try:
+            report.robots_allowed = scan_check(url, self.session)
+        except:
+            report.robots_allowed = True  # Default to allowed if check fails
         
         if not report.robots_allowed and not self.bypass_robots:
-            report.error = "Scanning not allowed by robots.txt (use bypass_robots=True to override)"
+            report.error = "Scanning not allowed by robots.txt"
             return report
         elif not report.robots_allowed and self.bypass_robots:
             report.robots_bypassed = True
-            print("BYPASSING robots.txt restrictions")
+            logger.info("Bypassing robots.txt restrictions")
         
         try:
-            # Fetch page ONCE
-            response = fetch_url(self.session, url, timeout=10, allow_redirects=True)
-            response.raise_for_status()
+            # Fetch page with extended timeout and no SSL verification
+            response = fetch_url(self.session, url, timeout=15, allow_redirects=True, verify=False)
             
-            # Parse HTML
+            if not response:
+                print(f"Website: Offline. Running Domain-check")
+
+                report.error = "Failed to fetch URL (timeout or connection error)"
+                report.success = False
+
+                self._run_domain_checks_only(report, domain, url)
+                return report
+            
+            # Don't fail on non-200 status codes - many malicious sites return errors
+            if response.status_code >= 400:
+                print(f"  Warning: HTTP {response.status_code} (continuing scan anyway)")
+            
+            # Parse HTML (may be empty for some malicious sites)
             soup = BeautifulSoup(response.content, 'html.parser')
             title = soup.find('title')
-            report.title = title.string.strip() if title and title.string else None
-            
-            # Get domain 
-            parsed_url = urlparse(response.url)
-            domain = parsed_url.netloc
-            
-            print(f"🔍 Scanning: {domain}")
-            
-            # Run all security checks
-            print("  ├─ Checking HTTPS...")
-            report.https = check_https_final(url, response)
-            
-            print("  ├─ Checking SSL certificate...")
-            report.ssl = check_ssl(domain)
-            
-            print("  ├─ Checking security headers...")
-            report.headers = check_headers(response)
-            
-            print("  ├─ Checking forms...")
-            report.forms = check_forms(soup, response.url)
-            
-            # Run domain checks
-            print("  ├─ Checking domain age...")
-            report.domain_age = check_domain_age(domain)
-            
-            print("  ├─ Checking blacklists...")
-            report.blacklist = check_blacklist(domain)
-            
-            print("  ├─ Checking for homograph attacks...")
-            report.homograph = check_homograph_attack(domain)
-            
-            print("  ├─ Checking domain in title...")
-            report.domain_in_title = check_domain_in_title(domain, report.title)
-            
-            print("  ├─ Checking form redirects...")
-            report.form_redirects = check_form_redirects(soup, response.url)
-            
-            print("  ├─ Checking domain length...")
-            report.domain_length = check_domain_length(domain)
-            
-            print("  ├─ Checking TLD...")
-            report.suspicious_tld = check_suspicious_tld(domain)
-            
-            print("  ├─ Checking subdomain depth...")
-            report.subdomain_depth = check_subdomain_depth(domain)
-            
-            print("  └─ Checking brand impersonation...")
-            report.brand_impersonation = check_brand_impersonation(domain)
-            
+            report.title = title.string.strip() if title and title.string else "No Title"
+
+            print(f"Scanning {domain}")
+
+            self._run_online_checks(report, response, soup)
+            self._run_domain_checks(report, domain, report.title)
+
             report.success = True
-            print("✅ Scan completed successfully!")
-            
+            print("Scan Completed. ")
+
         except Exception as e:
             report.error = str(e)
             print(f" Scan failed: {e}")
+
+            try:
+                self._run_domain_checks_only(report, domain)
+            except:
+                pass
         
         return report
+    
+    def _run_online_checks(self, report, response, soup):
+
+        #Check the website to be online
+        try:
+            report.https = check_https_final(report.url, response)
+        except Exception as e:
+            logger.debug(f"HTTPs check failed: {e}")
+
+        try:
+            domain = urlparse(response.url).netloc
+            report.ssl = check_ssl(domain)
+        except Exception as e:
+            logger.debug(f"SSL check failed: {e}")
+            report.ssl = {"valid": False, "error": str(e)}
+        
+        try:
+            report.headers = check_headers(response)
+        except Exception as e:
+            logger.debug(f"Headers check failed: {e}")
+        
+        try:
+            report.forms = check_forms(soup, response.url)
+        except Exception as e:
+            logger.debug(f"Forms check failed: {e}")
+        
+        try:
+            report.form_redirects = check_form_redirects(soup, response.url)
+        except Exception as e:
+            logger.debug(f"Form redirects check failed: {e}")
+
+    def _run_domain_checks(self, report, domain, title):
+        """Domain checks that work offline - NO PRINT STATEMENTS"""
+        try:
+            report.domain_age = check_domain_age(domain)
+        except Exception as e:
+            logger.debug(f"Domain age check failed: {e}")
+        
+        try:
+            report.blacklist = check_blacklist(domain)
+        except Exception as e:
+            logger.debug(f"Blacklist check failed: {e}")
+        
+        try:
+            report.homograph = check_homograph_attack(domain)
+        except Exception as e:
+            logger.debug(f"Homograph check failed: {e}")
+        
+        try:
+            report.domain_in_title = check_domain_in_title(domain, title)
+        except Exception as e:
+            logger.debug(f"Domain title check failed: {e}")
+        
+        try:
+            report.domain_length = check_domain_length(domain)
+        except Exception as e:
+            logger.debug(f"Domain length check failed: {e}")
+        
+        try:
+            report.suspicious_tld = check_suspicious_tld(domain)
+        except Exception as e:
+            logger.debug(f"TLD check failed: {e}")
+        
+        try:
+            report.subdomain_depth = check_subdomain_depth(domain)
+        except Exception as e:
+            logger.debug(f"Subdomain check failed: {e}")
+        
+        try:
+            report.brand_impersonation = check_brand_impersonation(domain)
+        except Exception as e:
+            logger.debug(f"Brand check failed: {e}")
+    
+    def _run_domain_checks_only(self, report, domain, url):
+        """Run domain checks when site is offline"""
+        self._run_domain_checks(report, domain, "")

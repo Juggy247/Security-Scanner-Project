@@ -1,3 +1,13 @@
 venv/
 __pycache__/
 *.pyc
+# macOS
+.DS_Store
+
+# Python
+__pycache__/
+*.pyc
+
+# ML models (remove if you REALLY want to track models)
+models/
+

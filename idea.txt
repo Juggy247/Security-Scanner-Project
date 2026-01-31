@@ -1,0 +1,92 @@
+┌─────────────────────────────────────────┐
+│         New Website Analysis            │
+└─────────────────────────────────────────┘
+                  │
+        ┌─────────┴─────────┐
+        ↓                   ↓
+┌──────────────┐    ┌──────────────┐
+│   Technical  │    │   Text/SBERT │
+│    Checks    │    │   Analysis   │
+│              │    │              │
+│ • No HTTPS   │    │ • Urgent     │
+│ • New domain │    │   language   │
+│ • Suspicious │    │ • Similar to │
+│   TLD        │    │   phishing   │
+│              │    │   sites      │
+│ Score: 75%   │    │ Score: 92%   │
+│ SUSPICIOUS   │    │ DANGEROUS    │
+└──────┬───────┘    └──────┬───────┘
+       │                   │
+       └─────────┬─────────┘
+                 ↓
+         ┌──────────────┐
+         │   Ensemble   │
+         │   Decision   │
+         │              │
+         │ If EITHER    │
+         │ says         │
+         │ DANGEROUS    │
+         │ → DANGEROUS  │
+         └──────────────┘
+                 ↓
+         Final: DANGEROUS
+         Confidence: 92%
+         Reasons:
+         • Text matches phishing patterns
+         • Technical red flags present
+
+
+
+
+┌─────────────────────────────────────────────────┐
+│            New Website Analysis                 │
+└─────────────────────────────────────────────────┘
+                     │
+        ┌────────────┴────────────┐
+        ↓                         ↓
+┌──────────────────┐    ┌──────────────────┐
+│  SBERT Embedding │    │ Technical Features│
+│                  │    │                   │
+│  Text → Vector   │    │ • HTTPS: 0        │
+│  384 numbers     │    │ • SSL: 0          │
+│                  │    │ • Age: 5 days     │
+│                  │    │ • Blacklist: 1    │
+│                  │    │ • TLD: suspicious │
+│                  │    │ 20 features       │
+└────────┬─────────┘    └────────┬──────────┘
+         │                       │
+         ↓                       │
+┌──────────────────┐            │
+│   KNN Comparison │            │
+│                  │            │
+│ Compare to 400   │            │
+│ reference sites  │            │
+│                  │            │
+│ Result: 90%      │            │
+│ dangerous        │            │
+│                  │            │
+│ Most similar:    │            │
+│ fake-paypal.tk   │            │
+└────────┬─────────┘            │
+         │                       │
+         └───────────┬───────────┘
+                     ↓
+         ┌───────────────────────┐
+         │   RANDOM FOREST       │
+         │                       │
+         │ Inputs:               │
+         │ • 384 embedding dims  │
+         │ • 20 technical features│
+         │ • KNN confidence      │
+         │ Total: 405 features   │
+         │                       │
+         │ Learns patterns like: │
+         │ "If KNN says 90%      │
+         │  dangerous AND no     │
+         │  HTTPS → DANGEROUS"   │
+         │                       │
+         │ Result: 95% dangerous │
+         └───────────────────────┘
+                     ↓
+              FINAL VERDICT
+         DANGEROUS (95% confident)

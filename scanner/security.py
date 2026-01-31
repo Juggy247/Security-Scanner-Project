@@ -4,6 +4,7 @@ import socket
 from typing import Dict, Any
 from urllib.parse import urlparse, urljoin
 
+
 def check_https_final(url: str, response) -> Dict[str, Any]:
     final_url = response.url
     final_scheme = urlparse(final_url).scheme
@@ -12,13 +13,13 @@ def check_https_final(url: str, response) -> Dict[str, Any]:
         "redirected_to_https": urlparse(url).scheme == "http" and final_scheme == "https"
     }
 
+
 def check_ssl(domain: str) -> dict:
     try:
         context = ssl.create_default_context()
         with socket.create_connection((domain, 443), timeout=5) as sock:
             with context.wrap_socket(sock, server_hostname=domain) as ssock:
                 cert = ssock.getpeercert()
-
                 issuer = "Unknown"
                 for item in cert.get('issuer', []):
                     if isinstance(item, tuple) and len(item) == 2:
@@ -26,7 +27,6 @@ def check_ssl(domain: str) -> dict:
                         if key == 'organizationName':
                             issuer = value
                             break
-
                 return {
                     "valid": True,
                     "expires": cert.get('notAfter'),
@@ -37,6 +37,7 @@ def check_ssl(domain: str) -> dict:
             "valid": False,
             "error": str(e)
         }
+
 
 def check_headers(response) -> dict:
     headers = response.headers
@@ -51,10 +52,11 @@ def check_headers(response) -> dict:
     missing = [h for h in important if h not in headers]
     return {"present": present, "missing": missing}
 
-def check_forms(soup, base_url) -> list:
-    forms = soup.find_all('form')
+
+def check_forms(soup: BeautifulSoup, base_url: str) -> list:
+    forms = soup.find_all('form')  # Finds all <form> tags in the HTML page
     issues = []
-    page_scheme = urlparse(base_url).scheme
+    page_scheme = urlparse(base_url).scheme  # Extracts http or https using urlparse
 
     for form in forms:
         action = form.get('action', '')
@@ -69,10 +71,10 @@ def check_forms(soup, base_url) -> list:
                 reason = "action over HTTP"
             else:
                 continue
-
             issues.append({
                 "type": "insecure_post",
                 "action": action_url,
                 "reason": reason
             })
+
     return issues

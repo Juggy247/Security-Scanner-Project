@@ -23,7 +23,6 @@ def main():
     df = pd.read_csv("training_urls.csv")
     csv_data = df.to_dict('records')
     print(f"   Loaded {len(csv_data)} rows from CSV")
-    
     # Import data
     print("\n📥 Importing data to MongoDB...")
     result = db.bulk_insert_from_csv(csv_data)

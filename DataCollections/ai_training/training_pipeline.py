@@ -24,19 +24,11 @@ from ai_training.text_processor import TextProcessor
 
 
 class TrainingPipeline:
-    """
-    Complete pipeline for processing training data.
     
-    Workflow:
-    1. Import CSV to MongoDB
-    2. Scan URLs and extract text
-    3. Store results in database
-    4. Track progress and handle errors
-    """
-    
+
     def __init__(self):
-        """Initialize pipeline with database and text processor"""
-        print("🔧 Initializing Training Pipeline...")
+        
+        print(" Training Pipeline Start...")
         self.db = TrainingDataDB()
         self.text_processor = TextProcessor()
         
@@ -45,18 +37,13 @@ class TrainingPipeline:
         self.session.headers.update({
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
         })
-        print("✅ Pipeline initialized\n")
+        print(" Pipeline Started\n")
     
     def fetch_url(self, url: str, timeout: int = 15) -> Optional[requests.Response]:
         """
-        Fetch URL with error handling.
-        
         Args:
             url: URL to fetch
             timeout: Request timeout in seconds
-        
-        Returns:
-            Response object or None if failed
         """
         try:
             response = self.session.get(
@@ -67,46 +54,38 @@ class TrainingPipeline:
             )
             return response
         except requests.exceptions.Timeout:
-            print(f"           ⚠️  Timeout")
+            print(f"             Timeout")
             return None
         except requests.exceptions.ConnectionError:
-            print(f"           ⚠️  Connection error")
+            print(f"             Connection error")
             return None
         except Exception as e:
-            print(f"           ⚠️  Error: {str(e)[:50]}")
+            print(f"            Error: {str(e)[:50]}")
             return None
     
     def import_csv(self, csv_path: str) -> Dict[str, int]:
-        """
-        Import URLs from CSV into MongoDB.
         
-        Args:
-            csv_path: Path to training_urls.csv
-        
-        Returns:
-            Dictionary with import statistics
-        """
-        print("\n" + "="*60)
-        print("📥 IMPORTING CSV TO MONGODB")
-        print("="*60)
+        print("\n" + "-"*60)
+        print(" IMPORTING CSV TO MONGODB")
+        print("-"*60)
         
         try:
             # Load CSV
             print(f"\n📂 Loading: {csv_path}")
             df = pd.read_csv(csv_path)
             
-            print(f"✅ Found {len(df)} URLs in CSV")
+            print(f" Found {len(df)} URLs in CSV")
             print(f"   Safe: {len(df[df['label'] == 'safe'])}")
             print(f"   Dangerous: {len(df[df['label'] == 'dangerous'])}")
             
-            # Convert to list of dicts
+            
             csv_data = df.to_dict('records')
             
-            # Import to MongoDB
-            print(f"\n💾 Importing to MongoDB...")
+            
+            print(f"\n Importing to MongoDB...")
             result = self.db.bulk_insert_from_csv(csv_data)
             
-            print(f"\n✅ Import Complete:")
+            print(f"\n Import Complete:")
             print(f"   Inserted: {result['inserted']}")
             print(f"   Duplicates (skipped): {result['duplicates']}")
             print(f"   Errors: {result['errors']}")
@@ -114,23 +93,15 @@ class TrainingPipeline:
             return result
             
         except FileNotFoundError:
-            print(f"❌ Error: File not found: {csv_path}")
+            print(f" Error: File not found: {csv_path}")
             return {"inserted": 0, "duplicates": 0, "errors": 1}
         
         except Exception as e:
-            print(f"❌ Error importing CSV: {e}")
+            print(f" Error importing CSV: {e}")
             return {"inserted": 0, "duplicates": 0, "errors": 1}
     
     def process_single_url(self, url_doc: Dict) -> bool:
-        """
-        Process a single URL: fetch and extract text.
         
-        Args:
-            url_doc: URL document from MongoDB
-        
-        Returns:
-            True if successful
-        """
         url = url_doc['url']
         
         try:
@@ -138,8 +109,9 @@ class TrainingPipeline:
             response = self.fetch_url(url, timeout=15)
             
             if not response:
-                self.db.mark_text_extraction_failed(url, "Failed to fetch URL")
+                self.db.mark_text_extraction_failed(url, "Dead/unreachable (timeout or connection error)")
                 return False
+                
             
             if response.status_code != 200:
                 error_msg = f"HTTP {response.status_code}"
@@ -171,21 +143,12 @@ class TrainingPipeline:
             return False
     
     def process_batch(self, batch_size: int = 50, delay: float = 2.0) -> Dict[str, int]:
-        """
-        Process a batch of URLs that need text extraction.
         
-        Args:
-            batch_size: Number of URLs to process
-            delay: Delay between requests (seconds)
-        
-        Returns:
-            Statistics about processing
-        """
         # Get URLs that need processing
         urls_to_process = self.db.get_urls_needing_text_extraction(limit=batch_size)
         
         if not urls_to_process:
-            print("\n✅ No URLs need processing!")
+            print("\n No URLs need processing!")
             return {"processed": 0, "successful": 0, "failed": 0}
         
         print(f"\n🔄 Processing {len(urls_to_process)} URLs...")
@@ -208,10 +171,10 @@ class TrainingPipeline:
             
             if success:
                 successful += 1
-                print(f"           ✅ Success")
+                print(f"            Success")
             else:
                 failed += 1
-                print(f"           ❌ Failed")
+                print(f"            Failed")
             
             # Delay between requests (be nice to servers)
             if i < len(urls_to_process):
@@ -224,18 +187,9 @@ class TrainingPipeline:
         }
     
     def process_all(self, batch_size: int = 50, delay: float = 2.0):
-        """
-        Process all URLs that need text extraction.
         
-        Processes in batches to allow for resuming if interrupted.
-        
-        Args:
-            batch_size: URLs per batch
-            delay: Delay between requests
-        """
-        print("\n" + "="*60)
-        print("🚀 STARTING TEXT EXTRACTION PIPELINE")
-        print("="*60)
+       
+        print(" STARTING TEXT EXTRACTION PIPELINE")
         
         # Show initial statistics
         self.db.print_statistics()
@@ -254,8 +208,8 @@ class TrainingPipeline:
                 break
             
             print(f"\n" + "="*60)
-            print(f"📦 BATCH {batch_number} - {remaining} URLs remaining")
-            print("="*60)
+            print(f" BATCH {batch_number} - {remaining} URLs remaining")
+            
             
             batch_start = time.time()
             
@@ -267,7 +221,7 @@ class TrainingPipeline:
             total_successful += result['successful']
             total_failed += result['failed']
             
-            print(f"\n📊 Batch {batch_number} Results:")
+            print(f"\n Batch {batch_number} Results:")
             print(f"   Successful: {result['successful']}")
             print(f"   Failed: {result['failed']}")
             print(f"   Time: {batch_time:.1f}s")
@@ -276,16 +230,16 @@ class TrainingPipeline:
             
             # Small delay between batches
             if remaining > batch_size:
-                print(f"\n⏸️  Pausing 5 seconds before next batch...")
+                print(f"\n  Pausing 5 seconds before next batch...")
                 time.sleep(5)
         
         # Final statistics
         total_time = time.time() - start_time
         
         print("\n" + "="*60)
-        print("✅ PROCESSING COMPLETE")
+        print(" PROCESSING COMPLETE")
         print("="*60)
-        print(f"\n📊 Total Results:")
+        print(f"\n Total Results:")
         print(f"   Successful: {total_successful}")
         print(f"   Failed: {total_failed}")
         print(f"   Total Time: {total_time/60:.1f} minutes")
@@ -298,9 +252,9 @@ class TrainingPipeline:
         self.db.print_statistics()
     
     def close(self):
-        """Clean up resources"""
+        
         self.db.close()
-        print("👋 Pipeline closed")
+        print(" Pipeline closed")
 
 
 # Command-line interface
@@ -337,16 +291,16 @@ if __name__ == "__main__":
         elif args.command == 'full':
             # Full pipeline: import + process
             pipeline.import_csv(args.csv)
-            print("\n⏸️  Waiting 3 seconds before starting processing...")
+            print("\n⏸  Waiting 3 seconds before starting processing...")
             time.sleep(3)
             pipeline.process_all(batch_size=args.batch_size, delay=args.delay)
     
     except KeyboardInterrupt:
-        print("\n\n⚠️  Interrupted by user. Progress saved in database.")
+        print("\n\n  Interrupted by user. Progress saved in database.")
         print("💡 Run 'process' command again to resume from where you left off.")
     
     except Exception as e:
-        print(f"\n❌ Error: {e}")
+        print(f"\n Error: {e}")
         import traceback
         traceback.print_exc()
     

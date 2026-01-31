@@ -283,6 +283,3 @@ class MongoDbConfig:
                 if self.add_suspicious_keyword(**kw_data):
                     added += 1
             return added
-
-    
-
